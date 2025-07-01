@@ -22,3 +22,4 @@ models/*.pkl
 # === System Files ===
 .DS_Store
 Thumbs.db
+# Fix Vercel failure
