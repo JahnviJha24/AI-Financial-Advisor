@@ -1,0 +1,24 @@
+# === Python Virtual Environments ===
+.venv/
+venv/
+ai-financial-advisor/venv/
+ai-financial-advisor/.venv/
+
+# === Python Cache ===
+__pycache__/
+*.pyc
+
+# === IDE Settings ===
+.vscode/
+.idea/
+
+# === Secret or Sensitive Files ===
+.env
+
+# === Large Model Files ===
+models/*.h5
+models/*.pkl
+
+# === System Files ===
+.DS_Store
+Thumbs.db

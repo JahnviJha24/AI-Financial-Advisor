@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Financial Advisor - Stock Predictor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --success-color: #059669;
+            --danger-color: #dc2626;
+            --warning-color: #d97706;
+            --dark-color: #1f2937;
+            --light-color: #f8fafc;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            max-width: 1200px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            animation: float 20s infinite linear;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% { transform: translateX(-50px) translateY(-50px); }
+            100% { transform: translateX(50px) translateY(50px); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+            position: relative;
+        }
+
+        .search-section {
+            padding: 2rem;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .popular-stocks {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .stock-tag {
+            display: inline-block;
+            background: white;
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border-radius: 25px;
+            border: 2px solid var(--primary-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .stock-tag:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            padding: 2rem;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid var(--primary-color);
+            transition: transform 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .prediction-display {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .price-info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 1rem;
+        }
+
+        .price-item {
+            text-align: center;
+        }
+
+        .price-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .price-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .prediction-arrow {
+            font-size: 3rem;
+            margin: 1rem 0;
+        }
+
+        .arrow-up {
+            color: var(--success-color);
+            animation: bounce-up 2s infinite;
+        }
+
+        .arrow-down {
+            color: var(--danger-color);
+            animation: bounce-down 2s infinite;
+        }
+
+        @keyframes bounce-up {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+        }
+
+        @keyframes bounce-down {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(10px); }
+        }
+
+        .confidence-bar {
+            background: #e2e8f0;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--danger-color), var(--warning-color), var(--success-color));
+            border-radius: 5px;
+            transition: width 1s ease;
+        }
+
+        .news-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .news-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .news-item.positive {
+            border-left-color: var(--success-color);
+        }
+
+        .news-item.negative {
+            border-left-color: var(--danger-color);
+        }
+
+        .news-item.neutral {
+            border-left-color: var(--warning-color);
+        }
+
+        .sentiment-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .sentiment-positive {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--success-color);
+        }
+
+        .sentiment-negative {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger-color);
+        }
+
+        .sentiment-neutral {
+            background: rgba(217, 119, 6, 0.1);
+            color: var(--warning-color);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 2rem 0;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: var(--danger-color);
+            padding: 1rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--danger-color);
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .price-info {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-container {
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-chart-line"></i> AI Financial Advisor</h1>
+                <p>Advanced Stock Price Prediction with Sentiment Analysis</p>
+            </div>
+
+            <!-- Search Section -->
+            <div class="search-section">
+                <div class="search-container">
+                    <input type="text" 
+                           class="search-input" 
+                           id="stockSymbol" 
+                           placeholder="Enter stock symbol (e.g., AAPL, GOOGL, MSFT...)"
+                           autocomplete="off">
+                    <button class="search-btn" onclick="analyzeStock()">
+                        <i class="fas fa-search"></i> Analyze
+                    </button>
+                </div>
+                
+                <div class="popular-stocks">
+                    <p class="text-muted mb-2">Popular Stocks:</p>
+                    <div id="popularStocks">
+                        <span class="stock-tag" onclick="selectStock('AAPL')">AAPL</span>
+                        <span class="stock-tag" onclick="selectStock('GOOGL')">GOOGL</span>
+                        <span class="stock-tag" onclick="selectStock('MSFT')">MSFT</span>
+                        <span class="stock-tag" onclick="selectStock('AMZN')">AMZN</span>
+                        <span class="stock-tag" onclick="selectStock('TSLA')">TSLA</span>
+                        <span class="stock-tag" onclick="selectStock('META')">META</span>
+                        <span class="stock-tag" onclick="selectStock('NVDA')">NVDA</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <h4>Analyzing Stock...</h4>
+                <p class="text-muted">This may take a few moments</p>
+            </div>
+
+            <!-- Results -->
+            <div class="results" id="results">
+                <!-- Stock Info Card -->
+                <div class="result-card" id="stockInfoCard">
+                    <div class="card-header">
+                        <h3><i class="fas fa-building"></i> Stock Information</h3>
+                        <span class="badge bg-primary" id="stockSymbolBadge"></span>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Company:</strong> <span id="companyName"></span></p>
+                            <p><strong>Sector:</strong> <span id="sector"></span></p>
+                            <p><strong>Industry:</strong> <span id="industry"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Market Cap:</strong> <span id="marketCap"></span></p>
+                            <p><strong>P/E Ratio:</strong> <span id="peRatio"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prediction Card -->
+                <div class="result-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-crystal-ball"></i> Price Prediction</h3>
+                        <span class="badge bg-info">Next Day Forecast</span>
+                    </div>
+                    <div class="prediction-display">
+                        <div class="price-info">
+                            <div class="price-item">
+                                <div class="price-value" id="currentPrice">$0.00</div>
+                                <div class="price-label">Current Price</div>
+                            </div>
+                            <div class="price-item">
+                                <div class="prediction-arrow" id="predictionArrow">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                            </div>
+                            <div class="price-item">
+                                <div class="price-value" id="predictedPrice">$0.00</div>
+                                <div class="price-label">Predicted Price</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <h5 id="priceChange">$0.00 (0.00%)</h5>
+                                <small class="text-muted">Expected Change</small>
+                            </div>
+                            <div class="col-md-4">
+                                <h5 id="direction">-</h5>
+                                <small class="text-muted">Direction</small>
+                            </div>
+                            <div class="col-md-4">
+                                <h5 id="confidence">0%</h5>
+                                <small class="text-muted">Confidence</small>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" id="confidenceFill"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Card -->
+                <div class="result-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-area"></i> Price History</h3>
+                        <span class="badge bg-secondary">Last 6 Months</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Sentiment Analysis Card -->
+                <div class="result-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-newspaper"></i> News Sentiment Analysis</h3>
+                        <span class="badge" id="overallSentimentBadge">Neutral</span>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 id="sentimentScore">0.000</h4>
+                                <small class="text-muted">Sentiment Score</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 id="totalArticles">0</h4>
+                                <small class="text-muted">Articles Analyzed</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-4 text-center">
+                                    <div class="text-success"><strong id="positiveCount">0</strong></div>
+                                    <small>Positive</small>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <div class="text-warning"><strong id="neutralCount">0</strong></div>
+                                    <small>Neutral</small>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <div class="text-danger"><strong id="negativeCount">0</strong></div>
+                                    <small>Negative</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="newsArticles">
+                        <!-- News articles will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Display -->
+            <div class="error-message" id="errorMessage" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="errorText"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <script>
+        let priceChart = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('stockSymbol').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    analyzeStock();
+                }
+            });
+        });
+
+        function selectStock(symbol) {
+            document.getElementById('stockSymbol').value = symbol;
+            analyzeStock();
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            hideLoading();
+        }
+
+        function showResults() {
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            hideLoading();
+        }
+
+        async function analyzeStock() {
+            const symbol = document.getElementById('stockSymbol').value.trim().toUpperCase();
+            
+            if (!symbol) {
+                showError('Please enter a stock symbol');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ symbol: symbol })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+                displayResults(data);
+                showResults();
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message || 'Failed to analyze stock. Please try again.');
+            }
+        }
+
+        function displayResults(data) {
+            // Stock Info
+            document.getElementById('stockSymbolBadge').textContent = data.symbol;
+            document.getElementById('companyName').textContent = data.stock_info.name;
+            document.getElementById('sector').textContent = data.stock_info.sector;
+            document.getElementById('industry').textContent = data.stock_info.industry;
+            document.getElementById('marketCap').textContent = formatMarketCap(data.stock_info.market_cap);
+            document.getElementById('peRatio').textContent = data.stock_info.pe_ratio;
+
+            // Prediction
+            displayPrediction(data.prediction);
+
+            // Chart
+            displayChart(data.historical_data, data.symbol);
+
+            // Sentiment
+            displaySentiment(data.sentiment);
+        }
+
+        function displayPrediction(prediction) {
+            document.getElementById('currentPrice').textContent = `${prediction.current_price}`;
+            document.getElementById('predictedPrice').textContent = `${prediction.predicted_price}`;
+            
+            const changeText = `${prediction.price_change} (${prediction.price_change_pct}%)`;
+            const changeElement = document.getElementById('priceChange');
+            changeElement.textContent = changeText;
+            
+            const arrow = document.getElementById('predictionArrow');
+            const direction = document.getElementById('direction');
+            
+            if (prediction.direction === 'UP') {
+                arrow.innerHTML = '<i class="fas fa-arrow-up"></i>';
+                arrow.className = 'prediction-arrow arrow-up';
+                changeElement.className = 'text-success';
+                direction.textContent = '📈 Bullish';
+                direction.className = 'text-success';
+            } else {
+                arrow.innerHTML = '<i class="fas fa-arrow-down"></i>';
+                arrow.className = 'prediction-arrow arrow-down';
+                changeElement.className = 'text-danger';
+                direction.textContent = '📉 Bearish';
+                direction.className = 'text-danger';
+            }
+
+            document.getElementById('confidence').textContent = `${prediction.confidence}%`;
+            document.getElementById('confidenceFill').style.width = `${prediction.confidence}%`;
+        }
+
+        function displayChart(historicalData, symbol) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            
+            if (priceChart) {
+                priceChart.destroy();
+            }
+
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: historicalData.labels,
+                    datasets: [{
+                        label: `${symbol} Price`,
+                        data: historicalData.prices,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function displaySentiment(sentiment) {
+            // Overall sentiment
+            const badge = document.getElementById('overallSentimentBadge');
+            badge.textContent = sentiment.overall_sentiment;
+            badge.className = `badge bg-${sentiment.overall_color}`;
+
+            document.getElementById('sentimentScore').textContent = sentiment.sentiment_score;
+            document.getElementById('totalArticles').textContent = sentiment.total_articles;
+
+            // Count sentiment types
+            let positive = 0, neutral = 0, negative = 0;
+            sentiment.articles.forEach(article => {
+                if (article.sentiment_label === 'Positive') positive++;
+                else if (article.sentiment_label === 'Neutral') neutral++;
+                else negative++;
+            });
+
+            document.getElementById('positiveCount').textContent = positive;
+            document.getElementById('neutralCount').textContent = neutral;
+            document.getElementById('negativeCount').textContent = negative;
+
+            // Display articles
+            const articlesContainer = document.getElementById('newsArticles');
+            articlesContainer.innerHTML = '';
+
+            sentiment.articles.slice(0, 5).forEach(article => {
+                const articleDiv = document.createElement('div');
+                articleDiv.className = `news-item ${article.sentiment_label.toLowerCase()}`;
+                
+                articleDiv.innerHTML = `
+                    <div class="sentiment-badge sentiment-${article.sentiment_label.toLowerCase()}">
+                        ${article.sentiment_label}
+                    </div>
+                    <h6><strong>${article.title}</strong></h6>
+                    <p class="text-muted small">${article.description}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-newspaper"></i> ${article.source}
+                        </small>
+                        <small class="text-muted">
+                            Score: ${article.sentiment.compound.toFixed(3)}
+                        </small>
+                    </div>
+                `;
+                
+                articlesContainer.appendChild(articleDiv);
+            });
+        }
+
+        function formatMarketCap(marketCap) {
+            if (marketCap === 'N/A' || !marketCap) return 'N/A';
+            
+            if (marketCap >= 1e12) {
+                return `${(marketCap / 1e12).toFixed(2)}T`;
+            } else if (marketCap >= 1e9) {
+                return `${(marketCap / 1e9).toFixed(2)}B`;
+            } else if (marketCap >= 1e6) {
+                return `${(marketCap / 1e6).toFixed(2)}M`;
+            } else {
+                return `${marketCap.toLocaleString()}`;
+            }
+        }
+    </script>
+</body>
+</html>
