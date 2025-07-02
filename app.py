@@ -143,6 +143,15 @@ if __name__ == '__main__':
             f.write('')
     
     print("🚀 Starting AI Financial Advisor...")
-    print("📊 Access your app at: http://127.0.0.1:5000")
     
-    app.run(debug=True, port=5000)
+    # Get port from environment variable (Render provides this)
+    port = int(os.environ.get('PORT', 5000))
+    
+    # For local development
+    if os.environ.get('ENVIRONMENT') == 'development':
+        print(f"📊 Access your app at: http://127.0.0.1:{port}")
+        app.run(debug=True, host='127.0.0.1', port=port)
+    else:
+        # For production deployment (Render)
+        print(f"📊 Starting production server on port {port}")
+        app.run(host='0.0.0.0', port=port, debug=False)
